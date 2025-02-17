@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Simple Scenario & Terrain Generator</title>
+  <script src="./alpine.min.js"></script>
+  <script src="./rolls-and-logs.js"></script>
+  <script src="./terrain-chart.js"></script>
+  <script src="./simple-generator.js"></script>
+</head>
+
+<body>
+
+  <h1>Simple Scenario & Terrain Generator</h1>
+
+
+  <template x-for="log in $store.log.logs">
+    <p x-text="log" style="margin: 0; padding: 0;"></p>
+  </template>
+
+
+  <h2>Terrain List</h2>
+
+  <template x-for="terrain in $store.terrain.features">
+    <div>
+      <!-- No Subtype -->
+      <template x-if="!terrain.hasSubtype">
+        <div>
+
+          <h3 x-text="terrain.name"></h3>
+          <p x-text="terrain.description"></p>
+
+          <!-- Rules, if any -->
+          <template x-if="terrain.rules">
+            <p x-text="terrain.rules"></p>
+          </template>
+
+        </div>
+      </template>
+
+      <!-- Has a Subtype -->
+      <template x-if="terrain.hasSubtype">
+        <div>
+
+          <h3 x-text="terrain.subtype.name + ' (' + terrain.name + ')'"></h3>
+          <i>
+            <p x-text="terrain.subtype.description"></p>
+          </i>
+
+          <!-- Rules, if any -->
+          <template x-if="terrain.subtype.rules">
+            <p x-text="terrain.subtype.rules"></p>
+          </template>
+          <template x-if="terrain.rules">
+            <div>
+              <b>
+                <p x-text="terrain.name + ' rules:'"></p>
+              </b>
+              <p x-text="terrain.rules"></p>
+            </div>
+          </template>
+
+        </div>
+      </template>
+
+      <!-- Button to resolve Mysterious terrain -->
+      <template x-if="terrain.mysterious">
+        <button x-on:click="terrain.resolve()">Resolve Mysterious Terrain</button>
+      </template>
+
+
+      <template x-if="terrain.hasChildren">
+        <div>
+
+          <ul>
+
+            <template x-for="child in terrain.children">
+              <li>
+                <!-- No Subtype -->
+                <template x-if="!child.hasSubtype">
+                  <div>
+
+                    <h3 x-text="child.name"></h3>
+                    <p x-text="child.description"></p>
+
+                    <!-- Rules, if any -->
+                    <template x-if="child.rules">
+                      <p x-text="child.rules"></p>
+                    </template>
+
+                  </div>
+                </template>
+
+                <!-- Has a Subtype -->
+                <template x-if="child.hasSubtype">
+                  <div>
+
+                    <h3 x-text="child.subtype.name + ' (' + child.name + ')'"></h3>
+                    <p x-text="child.subtype.description"></p>
+
+                    <!-- Rules, if any -->
+                    <template x-if="child.subtype.rules">
+                      <p x-text="child.subtype.rules"></p>
+                    </template>
+                    <template x-if="child.rules">
+                      <div>
+                        <p x-text="child.name + ' rules:'"></p>
+                        <p x-text="child.rules"></p>
+                      </div>
+                    </template>
+
+                  </div>
+                </template>
+
+                <!-- Button to resolve Mysterious terrain -->
+                <template x-if="child.mysterious">
+                  <button x-on:click="child.resolve()">Resolve Mysterious Terrain</button>
+                </template>
+
+              </li>
+            </template>
+
+          </ul>
+
+        </div>
+      </template>
+
+    </div>
+  </template>
+
+</body>
+
+</html>
