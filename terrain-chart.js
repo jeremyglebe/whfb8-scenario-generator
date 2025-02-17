@@ -38,13 +38,12 @@ class TerrainFeature {
 
 class SettlementOfOrder extends TerrainFeature {
   constructor() {
-    super('Settlement of Order', '');
+    super('Settlement of Order', 'D3 buildings and D3 sets of obstacles, plus one roll on the Steadfast Sanctum part of the chart.');
     this.hasChildren = true;
 
     // Roll D3s for number of buildings and obstacles
-    const numBuildings = Math.floor(Math.random() * 3) + 1;
-    const numObstacles = Math.floor(Math.random() * 3) + 1;
-    this.description = 'D3 buildings and D3 sets of obstacles, plus one roll on the Steadfast Sanctum part of the chart.';
+    const numBuildings = rollD3('D3 Buildings');
+    const numObstacles = rollD3('D3 Obstacles');
 
     // Generate children for the settlement
     this.children = [];
@@ -80,8 +79,9 @@ class SteadfastSanctum extends TerrainFeature {
       new ElvenWaystone(),
       new DwarfBrewhouse(),
     ];
-    const randomIndex = Math.floor(Math.random() * options.length);
+    const randomIndex = rollD6('D6, Steadfast Sanctum Subtype') - 1;
     this.subtype = options[randomIndex];
+    log(`Result: ${this.subtype.name}`);
   }
 }
 
@@ -165,8 +165,9 @@ class SinisterStructure extends TerrainFeature {
       new IdolOfGork(),
       new TowerOfBlood(),
     ]
-    const randomIndex = Math.floor(Math.random() * options.length);
+    const randomIndex = rollD6('D6, Sinister Structure Subtype') - 1;
     this.subtype = options[randomIndex];
+    log(`Result: ${this.subtype.name}`);
   }
 }
 
@@ -250,8 +251,9 @@ class Hill extends TerrainFeature {
       new ScreeSlope(),
       new AnvilOfVaul(),
     ]
-    const randomIndex = Math.floor(Math.random() * options.length);
+    const randomIndex = rollD6('D6, Hill Subtype') - 1;
     this.subtype = options[randomIndex];
+    log(`Result: ${this.subtype.name}`);
   }
 }
 
@@ -325,8 +327,10 @@ class MysteriousForest extends TerrainFeature {
       new VenomThicket(),
       new Wildwood(),
     ]
+    skipLogLine();
     const randomIndex = rollD6('D6 Resolving Mysterious Forest') - 1;
     this.subtype = options[randomIndex];
+    log(`Result: ${this.subtype.name}`);
   }
 
 }
@@ -406,8 +410,15 @@ class Obstacle extends TerrainFeature {
       new BlessedBulwark(),
       new GhostFence(),
     ];
-    const randomIndex = Math.floor(Math.random() * options.length);
+
+    // Roll a D6 to determine the random type (index) - 6 is a reroll
+    let randomIndex = rollD6('D6, Obstacle Subtype') - 1;
+    // If the roll is 6, reroll
+    while (randomIndex === 5) {
+      randomIndex = rollD6('D6, Obstacle Subtype (reroll)') - 1;
+    }
     this.subtype = options[randomIndex];
+    log(`Result: ${this.subtype.name}`);
   }
 
 }
@@ -463,3 +474,264 @@ class GhostFence extends TerrainFeature {
   }
 }
 //#endregion
+
+class MysteriousRiver extends TerrainFeature {
+  constructor() {
+    super(
+      'Mysterious River',
+      'Roll a further D6:',
+      'Cannot be Marched through. Units even partially in the river cannot be steadfast and cannot claim rank bonus.'
+    );
+    this.mysterious = true;
+  }
+
+  resolve() {
+    this.hasSubtype = true;
+    this.mysterious = false; // Set to false to indicate that the subtype has been resolved
+    const options = [
+      new River(),
+      new BoilingFlood(),
+      new NecroticOoze(),
+      new RagingTorrent(),
+      new RiverOfBlood(),
+      new RiverOfLight(),
+    ];
+    skipLogLine();
+    const randomIndex = rollD6('D6 Resolving Mysterious River') - 1;
+    this.subtype = options[randomIndex];
+    log(`Result: ${this.subtype.name}`);
+  }
+}
+
+//#region Mysterious Rivers
+
+class River extends TerrainFeature {
+  constructor() {
+    super(
+      'River',
+      'The reassuring and impeding flow of a river can help an army protect its flank or otherwise slow the enemy advance. Launching an assault across a river is no easy task, and often the fords, bridges and other crossing points become crucial objectives for the opposing armies.',
+    );
+  }
+}
+
+class BoilingFlood extends TerrainFeature {
+  constructor() {
+    super(
+      'Boiling Flood',
+      'This river\'s waters are boiling with incredible fury - it\'s best to cross quickly, lest you never leave the river at all.',
+      'Any model at least partially in the boiling flood at the end of any turn suffers a Strength 4 hit with no armour saves allowed. Models that are immune to Flaming Attacks do not suffer from this effect.',
+    );
+  }
+}
+
+class NecroticOoze extends TerrainFeature {
+  constructor() {
+    super(
+      'Necrotic Ooze',
+      'Only the stench of this thick and lifeless sludge can compete with its toxic virulence. Those crossing this river had best hold their breath.',
+      'Necrotic ooze counts as dangerous terrain for all models. Additionally, a unit that moves through necrotic ooze gains the Poisoned Attacks special rule until the end of the following player turn, so vile are the waters that cling to their blades.',
+    );
+  }
+}
+
+class RagingTorrent extends TerrainFeature {
+  constructor() {
+    super(
+      'Raging Torrent',
+      'The icy rivers of the high mountains run clear, pure and very swift indeed.',
+      'A raging torrent is Dangerous Terrain. However, such are the invigorating effects of the icy waters that any models that are in the river (or left the river earlier in the turn) have +3 Initiative.',
+    );
+  }
+}
+
+class RiverOfBlood extends TerrainFeature {
+  constructor() {
+    super(
+      'River of Blood',
+      'When the rivers of the world turn to blood it is a sign that Khorne has regained ascendancy at the head of the unholy pantheon of the Realm of Chaos. The time of the Blood God has come!',
+      'A unit that moves or charges through a River of Blood is counted as causing Fear until the end of the following player turn, so ghastly is their blood-slicked appearance.',
+    );
+  }
+}
+
+class RiverOfLight extends TerrainFeature {
+  constructor() {
+    super(
+      'River of Light',
+      'This is no mere river, but a swirling and seething mass of Light Magic.',
+      'When a unit enters a River of Light, it is immediately the target of a randomly chosen Light Magic spell. The spell is automatically cast and cannot be dispelled. If the spell has a choice of different casting values, it is assumed to be cast at the lower value.',
+    );
+  }
+}
+
+//#endregion
+
+class MagicalMystery extends TerrainFeature {
+  constructor() {
+    super(
+      'Magical Mystery',
+      'Roll a further D6:',
+    );
+    this.hasSubtype = true;
+
+    const options = [
+      new SinisterStatue(),
+      new ArcaneRuins(),
+      new NehekharanSphynx(),
+      new SorcerousPortal(),
+      new WyrdingWell(),
+      new MagicCircle(),
+    ];
+    const randomIndex = rollD6('D6, Magical Mystery Subtype') - 1;
+    this.subtype = options[randomIndex];
+    log(`Result: ${this.subtype.name}`);
+  }
+}
+
+//#region Magical Mysteries
+
+class SinisterStatue extends TerrainFeature {
+  constructor() {
+    super(
+      'Sinister Statue',
+      'Witless watchmen, set to stand sentinel over secret shrines by an ancient and unknown force, these sinister statues take exception to interlopers in a most forceful fashion.',
+      'At the start of each player turn, roll a dice for every unit within 6" of the Sinister Statue. On a 4 or more, nothing happens – the statue either doesn\'t notice the unit, or recognises it as an ally of its forgotten master. On a 1-3, beams of light blaze out of its stone eyes – the unit suffers D6 Strength 4 hits.'
+    );
+  }
+}
+
+class ArcaneRuins extends TerrainFeature {
+  constructor() {
+    super(
+      'Arcane Ruins',
+      'The stones of fallen temples still resonate with magical energy centuries after their final celebrants crumbled to dust.',
+      'Any wizard within 6" of an arcane ruin can choose to roll up to four dice when channelling, rather than one. However, if three or more dice come up as 6s, the wizard must immediately roll on the Miscast table.'
+    );
+  }
+}
+
+class NehekharanSphynx extends TerrainFeature {
+  constructor() {
+    super(
+      'Nehekharan Sphynx',
+      'Long ago, the rulers of Nehekhara bound the trickster spirits of the deserts into great temples. Legend tells that those who entreat a Sphynx receive great power – if they can quench the spirit\'s thirst for trickery and deception.',
+      'At the start of each player turn, the player whose turn it is can choose one of his characters within 6" of the Nehekharan Sphynx to challenge the spirit to a riddling contest. The challenger must take an Initiative test. If the test is failed, the Sphynx devours part of the challenger\'s soul and the model suffers a wound, with no armour saves allowed.If the test is passed, the challenger receives one of the following special rules, determined randomly, for the rest of the game: Devastating Charge, Heroic Killing Blow or Loremaster(Death) – this last one has no benefit to non - Wizards(i.e.only Wizards can actually use the spells!) but that doesn\'t stop the Sphynx bestowing it inappropriately.'
+    );
+  }
+}
+
+class SorcerousPortal extends TerrainFeature {
+  constructor() {
+    super(
+      'Sorcerous Portal',
+      'A sorcerous portal is prone to appear where certain contours of hill and valley funnel the Winds of Magic in unexpected ways. Many are caged and harnessed by ambitious sorcerers, but wood and stone cannot easily contain raw magic.',
+      'At the start of the Magic phase, after power and dispel dice have been generated, but before spells are cast, the sorcerous portal belches forth energy in the form of a spell. Roll 2D6 on the table below each time to see what spell is cast.'
+    );
+  }
+}
+
+class WyrdingWell extends TerrainFeature {
+  constructor() {
+    super(
+      'Wyrding Well',
+      'It is said that Wyrding Wells are set upon sites where the blood of the world bubbles to the surface. This amber liquid has magical, if unpredictable, properties and is a prized ingredient in many potions and elixirs.',
+      'Providing it is not in combat, a unit within 3" can drink from the well at the end of its Movement phase. Roll a D6 on the following table to discover the outcome of the unit\'s incautious imbibing: 1. Magical Poisoning: Models in the unit cannot make any voluntary action (including shooting, casting spells, channelling, using magic items and so on) until the start of the following turn, whilst copious vomiting ensues. 2-4. Ailments Banished: The unit immediately recovers 2D6 wounds’ worth of models, as described for the Lore of Life Regrowth spell. 6. The Gift of Oblivion: The coursing earthblood erases all fear and sensation from the minds of the drinkers. The unit is subject to the rules for Stupidity and is Unbreakable for the remainder of the game.'
+    );
+  }
+}
+
+class MagicCircle extends TerrainFeature {
+  constructor() {
+    super(
+      'Magic Circle',
+      'Ancient mannish ruins, raised to empower primitive rites, magic circles can dissipate harmful sorcery and offer protection to those nearby.',
+      'Units within 6" of the Magic Circle have the Magic Resistance (2) special rule.'
+    );
+  }
+}
+
+//#endregion
+
+class Marsh extends TerrainFeature {
+  constructor() {
+    super(
+      'Marsh',
+      'A battle in a marsh can easily end in disaster – the footing is unstable, the mud clings to weapons and as many warriors drown as are hacked apart by the foe. Marshes are therefore best employed as traps to suck your enemy into, rather than bastions from which to fight.',
+      'Marshland is dangerous terrain for all units, other than those with the Skirmish special rule. Cavalry, monstrous cavalry and chariots that enter marshland fail their Dangerous Terrain tests on a 1 or 2, rather than a 1.',
+    );
+    this.hasSubtype = true;
+
+    const options = [
+      new EarthbloodMere(),
+      new KhemrianQuicksand(),
+      new MistWreathedSwamp(),
+    ];
+    const randomIndex = rollD3('D3, Marsh Subtype') - 1;
+    this.subtype = options[randomIndex];
+    log(`Result: ${this.subtype.name}`);
+  }
+}
+
+//#region Marshes
+
+class EarthbloodMere extends TerrainFeature {
+  constructor() {
+    super(
+      'Earthblood Mere',
+      'Raw magical power of the lifewind Ghyran bubbles through the waters of this marsh.',
+      'Any unit with the majority of its models within the mere has Regeneration (6+).',
+    );
+  }
+}
+
+class KhemrianQuicksand extends TerrainFeature {
+  constructor() {
+    super(
+      'Khemrian Quicksand',
+      'The burning desert hides a multitude of traps. Many an unwary warrior has been sucked to his death by the shifting sands of Khemri - the larger the victim, the more certain the fate.',
+      'A monster, monstrous infantry or monstrous cavalry model that fails its Dangerous Terrain test for Khemrian Quicksand is removed as a casualty with no saves of any kind allowed.'
+    );
+  }
+}
+
+class MistWreathedSwamp extends TerrainFeature {
+  constructor() {
+    super(
+      'Mist Wreathed Swamp',
+      'The vapours of this swamp hang in the chill air, hiding those within from the gaze of their enemy. Yet who knows what horrors lurk within the mist, just waiting to pounce?',
+      'If the majority of a unit\'s models are wholly within a mist - wreathed swamp, the unit counts as being in hard cover. However, at the end of each Movement phase, the unit must pass an Initiative test, or have D6 models dragged to their doom by the monstrous Fimir lurking in the mist(the victims are selected in the same manner as the allocation of shooting hits) '
+    );
+  }
+}
+
+//#endregion
+
+class EncampmentOfDestruction extends TerrainFeature {
+  constructor() {
+    super('Encampment of Destruction', 'D3 buildings, D3 sets of obstacles plus one roll on the Sinister Structure part of the chart.');
+    this.hasChildren = true;
+
+    // Roll D3s for number of buildings and obstacles
+    const numBuildings = rollD3('D3 Buildings');
+    const numObstacles = rollD3('D3 Obstacles');
+
+    // Generate children for the encampment
+    this.children = [];
+
+    // Generate buildings
+    for (let i = 0; i < numBuildings; i++) {
+      const building = new Building();
+      this.children.push(building);
+    }
+
+    // Generate obstacles
+    for (let i = 0; i < numObstacles; i++) {
+      const obstacle = new Obstacle();
+      this.children.push(obstacle);
+    }
+
+    // Generate sinister structure
+    const sinisterStructure = new SinisterStructure();
+    this.children.push(sinisterStructure);
+  }
+}

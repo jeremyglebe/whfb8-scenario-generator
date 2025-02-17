@@ -22,6 +22,14 @@ function rollD6s(amount = 1, rollprompt) {
   return results;
 }
 
+function rollD3(rollprompt) {
+  const result = Math.floor(Math.random() * 3) + 1;
+  if (rollprompt) {
+    log(`${rollprompt} [${result}]`);
+  }
+  return result;
+}
+
 function log(msg) {
   Alpine.store('log').logs.push(msg);
 }
